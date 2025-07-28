@@ -1,0 +1,84 @@
+
+`timescale 1ns / 1ps
+
+module tb_restoring_divider_32bit;
+
+    // Testbench signals
+    reg clk;
+    reg rst;
+    reg start;
+    reg [31:0] dividend;
+    reg [31:0] divisor;
+    wire [31:0] quotient;
+    wire [31:0] remainder;
+    wire done;
+
+    // Instantiate the divider module
+    restoring_divider_32bit uut (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
+        .dividend(dividend),
+        .divisor(divisor),
+        .quotient(quotient),
+        .remainder(remainder),
+        .done(done)
+    );
+
+    // Clock generation
+    initial clk = 0;
+    always #5 clk = ~clk; // 100 MHz clock
+
+    // Stimulus
+    initial begin
+        $display("Starting simulation...");
+        rst = 1;
+        start = 0;
+        dividend = 0;
+        divisor = 0;
+        #20;
+
+        rst = 0;
+        #10;
+
+        // Test case 1: Normal division
+        dividend = 32'd456787434567;
+        divisor  = 32'd45;
+        start = 1;
+        #10 start = 0;
+
+        // Wait for operation to complete
+        wait(done);
+        $display("Test 1 => 100 / 7 => Quotient = %d, Remainder = %d", quotient, remainder);
+
+        // Test case 2: Division by 1
+        #20;
+        dividend = 32'd255;
+        divisor  = 32'd1;
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("Test 2 => 255 / 1 => Quotient = %d, Remainder = %d", quotient, remainder);
+
+        // Test case 3: Dividend less than divisor
+        #20;
+        dividend = 32'd5;
+        divisor  = 32'd10;
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("Test 3 => 5 / 10 => Quotient = %d, Remainder = %d", quotient, remainder);
+
+        // Test case 4: Division by zero (optional safety check)
+        #20;
+        dividend = 32'd25;
+        divisor  = 32'd0;
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("Test 4 => 25 / 0 => Quotient = %d, Remainder = %d", quotient, remainder);
+
+        $finish;
+    end
+
+endmodule
